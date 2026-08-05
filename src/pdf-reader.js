@@ -6,27 +6,47 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 export async function extractTextFromPdf(file, onProgress = () => {}) {
   const data = new Uint8Array(await file.arrayBuffer());
   const loadingTask = pdfjsLib.getDocument({ data });
-  const pdf = await loadingTask.promise;
   const pages = [];
 
-  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-    onProgress({ current: pageNumber, total: pdf.numPages });
-    const page = await pdf.getPage(pageNumber);
-    const content = await page.getTextContent();
-    pages.push(itemsToLines(content.items));
-    page.cleanup();
+  try {
+    const pdf = await loadingTask.promise;
+
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      onProgress({ current: pageNumber, total: pdf.numPages });
+
+      const page = await pdf.getPage(pageNumber);
+
+      try {
+        const content = await page.getTextContent();
+        pages.push(itemsToLines(content.items));
+      } finally {
+        if (typeof page.cleanup === 'function') {
+          page.cleanup();
+        }
+      }
+    }
+
+    const text = pages.join('\n\n');
+
+    if (text.trim().length < 100) {
+      throw new Error(
+        'O PDF não possui texto selecionável suficiente. Ele provavelmente foi digitalizado como imagem e precisa de OCR.',
+      );
+    }
+
+    return text;
+  } finally {
+    // Nas versões atuais do PDF.js, destroy() pertence ao loadingTask
+    // retornado por getDocument(), e não ao PDFDocumentProxy.
+    if (typeof loadingTask.destroy === 'function') {
+      try {
+        await loadingTask.destroy();
+      } catch (cleanupError) {
+        // Uma falha de limpeza não deve invalidar um relatório já extraído.
+        console.warn('Não foi possível finalizar o worker do PDF.js:', cleanupError);
+      }
+    }
   }
-
-  await pdf.destroy();
-  const text = pages.join('\n\n');
-
-  if (text.trim().length < 100) {
-    throw new Error(
-      'O PDF não possui texto selecionável suficiente. Ele provavelmente foi digitalizado como imagem e precisa de OCR.',
-    );
-  }
-
-  return text;
 }
 
 function itemsToLines(items) {
