@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Analise relatórios de giro de estoque e identifique produtos com baixa cobertura." />
+  <meta name="theme-color" content="#17324d" />
+  <title>Analisador de Giro de Estoque</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-content">
+      <a class="brand" href="/" aria-label="Página inicial">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 5.5 12 2l8 3.5v13L12 22l-8-3.5v-13Z"/><path d="m4 5.5 8 3.5 8-3.5M12 9v13"/></svg>
+        </span>
+        <span>
+          <strong>Giro de Estoque</strong>
+          <small>Análise de cobertura</small>
+        </span>
+      </a>
+      <div class="privacy-pill">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
+        Processamento local no navegador
+      </div>
+    </div>
+  </header>
+
+  <main class="container main-content">
+    <section id="upload-section" class="upload-layout">
+      <div class="intro-copy">
+        <span class="eyebrow">RELATÓRIO DE GIRO DE ESTOQUE</span>
+        <h1>Descubra rapidamente quais produtos precisam de reposição.</h1>
+        <p>Envie o relatório em PDF ou TXT. O sistema calcula os dias de cobertura, separa os itens abaixo de 5, 10, 15 e 20 dias e gera uma planilha pronta.</p>
+
+        <div class="feature-list">
+          <div class="feature-item">
+            <span class="feature-icon"><svg viewBox="0 0 24 24"><path d="M4 19V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span>
+            <div><strong>Leitura automática</strong><span>Identifica produtos e o período do relatório.</span></div>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 16 4-5 3 3 5-7"/></svg></span>
+            <div><strong>Cobertura em dias</strong><span>Com base na saída do período e no estoque atual.</span></div>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg></span>
+            <div><strong>Exportação completa</strong><span>Baixe os resultados em XLSX ou CSV.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="upload-card">
+        <div id="drop-zone" class="drop-zone" role="button" tabindex="0" aria-label="Enviar relatório em PDF ou TXT">
+          <input id="file-input" type="file" accept=".pdf,.txt,application/pdf,text/plain" hidden />
+          <span class="upload-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/></svg>
+          </span>
+          <h2>Arraste o relatório aqui</h2>
+          <p>ou selecione um arquivo do computador</p>
+          <button id="browse-button" class="button button-primary" type="button">Selecionar PDF ou TXT</button>
+          <small>Tamanho recomendado: até 20 MB</small>
+        </div>
+
+        <div class="alternative-divider"><span>ou</span></div>
+        <div class="upload-actions">
+          <button id="paste-toggle" class="button button-secondary" type="button" aria-expanded="false">
+            Colar texto do relatório
+          </button>
+          <button id="sample-button" class="button button-ghost" type="button">Testar com exemplo</button>
+        </div>
+
+        <div id="paste-panel" class="paste-panel" hidden>
+          <label for="paste-text">Conteúdo do relatório</label>
+          <textarea id="paste-text" rows="9" placeholder="Cole aqui o texto completo do relatório..."></textarea>
+          <button id="process-paste" class="button button-primary" type="button">Processar texto</button>
+        </div>
+
+        <div id="processing" class="processing" hidden aria-live="polite">
+          <div class="processing-row">
+            <span class="spinner" aria-hidden="true"></span>
+            <span id="processing-text">Processando…</span>
+          </div>
+          <div class="progress-track"><span id="processing-bar"></span></div>
+        </div>
+
+        <div id="error-box" class="alert alert-error" hidden role="alert">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 17h.01"/></svg>
+          <span id="error-text"></span>
+        </div>
+
+        <p class="privacy-note">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          O arquivo é processado apenas no seu navegador e não é enviado para um servidor.
+        </p>
+      </div>
+    </section>
+
+    <section id="dashboard-section" class="dashboard" hidden>
+      <div class="report-toolbar">
+        <div class="report-identity">
+          <span class="file-icon"><svg viewBox="0 0 24 24"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5M9 12h6M9 16h6"/></svg></span>
+          <div>
+            <h1 id="source-name">Relatório</h1>
+            <p id="source-meta"></p>
+          </div>
+        </div>
+        <div class="toolbar-actions">
+          <button id="print-button" class="button button-secondary" type="button">Imprimir</button>
+          <button id="new-report" class="button button-primary" type="button">Novo relatório</button>
+        </div>
+      </div>
+
+      <div class="calculation-panel">
+        <div class="calculation-copy">
+          <h2>Parâmetros do cálculo</h2>
+          <p>Média diária = saída do período ÷ dias. Cobertura = estoque atual ÷ média diária.</p>
+        </div>
+        <div class="calculation-fields">
+          <label> Dias do período
+            <input id="period-days" type="number" min="1" max="366" value="30" />
+          </label>
+          <label> Meta de estoque
+            <div class="input-suffix"><input id="target-days" type="number" min="1" max="365" value="20" /><span>dias</span></div>
+          </label>
+          <button id="apply-calculation" class="button button-secondary" type="button">Atualizar</button>
+        </div>
+      </div>
+
+      <div class="summary-grid">
+        <article class="summary-card summary-neutral">
+          <span>Total de produtos</span><strong id="summary-total">0</strong><small>itens reconhecidos</small>
+        </article>
+        <article class="summary-card summary-critical">
+          <span>Abaixo de 5 dias</span><strong id="summary-below5">0</strong><small>reposição imediata</small>
+        </article>
+        <article class="summary-card summary-high">
+          <span>Abaixo de 10 dias</span><strong id="summary-below10">0</strong><small>prioridade alta</small>
+        </article>
+        <article class="summary-card summary-warning">
+          <span>Abaixo de 20 dias</span><strong id="summary-below20">0</strong><small>todos em atenção</small>
+        </article>
+      </div>
+
+      <div class="content-grid">
+        <section class="panel distribution-panel">
+          <div class="panel-heading"><div><h2>Distribuição por cobertura</h2><p>Faixas exclusivas de dias de estoque.</p></div></div>
+          <div id="distribution" class="distribution"></div>
+        </section>
+
+        <section class="panel export-panel">
+          <div class="panel-heading"><div><h2>Exportar resultados</h2><p>O XLSX inclui resumo, faixas cumulativas e todos os itens.</p></div></div>
+          <div class="export-buttons">
+            <button id="export-xlsx" class="export-button" type="button">
+              <span class="export-icon export-xlsx"><svg viewBox="0 0 24 24"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5M9 12l5 5M14 12l-5 5"/></svg></span>
+              <span><strong>Planilha XLSX</strong><small>Relatório completo com várias abas</small></span>
+            </button>
+            <button id="export-csv" class="export-button" type="button">
+              <span class="export-icon export-csv"><svg viewBox="0 0 24 24"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5M9 13h6M9 17h6"/></svg></span>
+              <span><strong>CSV filtrado</strong><small>Somente os itens exibidos pelo filtro</small></span>
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <section class="panel table-panel">
+        <div class="table-topbar">
+          <div><h2>Produtos</h2><p id="filtered-count">0 itens</p></div>
+          <div class="filters">
+            <label class="search-field">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+              <input id="search" type="search" placeholder="Buscar produto ou código" />
+            </label>
+            <label><span class="sr-only">Faixa de cobertura</span>
+              <select id="threshold">
+                <option value="below5">Abaixo de 5 dias</option>
+                <option value="below10">Abaixo de 10 dias</option>
+                <option value="below15">Abaixo de 15 dias</option>
+                <option value="below20" selected>Abaixo de 20 dias</option>
+                <option value="atLeast20">20 dias ou mais</option>
+                <option value="noOutput">Sem saída no período</option>
+                <option value="all">Todos os itens</option>
+              </select>
+            </label>
+            <label><span class="sr-only">Unidade de apresentação</span><select id="unit"><option value="all">Todas as unidades</option></select></label>
+            <label><span class="sr-only">Itens por página</span>
+              <select id="page-size">
+                <option value="25">25 por página</option>
+                <option value="50" selected>50 por página</option>
+                <option value="100">100 por página</option>
+                <option value="all">Exibir todos</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th><button data-sort="code" type="button">Código</button></th>
+                <th><button data-sort="description" type="button">Produto</button></th>
+                <th><button data-sort="unit" type="button">UN</button></th>
+                <th class="numeric"><button data-sort="monthlyOutput" type="button">Saída</button></th>
+                <th class="numeric"><button data-sort="currentStock" type="button">Estoque atual</button></th>
+                <th class="numeric"><button data-sort="dailyAverage" type="button">Média/dia</button></th>
+                <th><button data-sort="coverageDays" type="button">Cobertura</button></th>
+                <th><button data-sort="riskBand" type="button">Faixa</button></th>
+                <th class="numeric"><button data-sort="replenishmentQuantity" type="button">Repor p/ meta</button></th>
+              </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+          </table>
+          <div id="empty-state" class="empty-state" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+            <strong>Nenhum item encontrado</strong>
+            <span>Altere a busca ou os filtros selecionados.</span>
+          </div>
+        </div>
+
+        <div id="pagination" class="pagination" hidden>
+          <button id="previous-page" class="button button-secondary" type="button">Anterior</button>
+          <span id="page-info">Página 1 de 1</span>
+          <button id="next-page" class="button button-secondary" type="button">Próxima</button>
+        </div>
+      </section>
+
+      <details id="warnings-panel" class="warnings-panel" hidden>
+        <summary><strong><span id="warnings-count">0</span> trecho(s) não reconhecido(s)</strong><span>Verificar detalhes</span></summary>
+        <p>Esses trechos não entraram nos cálculos. Normalmente indicam uma variação no formato do relatório.</p>
+        <ol id="warnings-list"></ol>
+      </details>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="container">Analisador de Giro de Estoque • Os dados permanecem no dispositivo do usuário.</div></footer>
+  <div id="toast" class="toast" hidden role="status" aria-live="polite"></div>
+
+  <script type="module" src="/src/app.js"></script>
+</body>
+</html>
