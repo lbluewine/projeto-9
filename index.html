@@ -8,96 +8,60 @@
   <title>Analisador de Giro de Estoque</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/src/styles.css" />
+
+  <style>
+    /* Tela inicial simplificada e centralizada */
+    #upload-section.upload-layout {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 0;
+    }
+
+    .upload-page {
+      width: min(100%, 680px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      margin: 0 auto;
+    }
+
+    .upload-page-title {
+      margin: 0;
+      text-align: center;
+      font-size: clamp(1.7rem, 4vw, 2.5rem);
+      line-height: 1.15;
+      color: var(--text, #17324d);
+    }
+
+    #upload-section .upload-card {
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 720px) {
+      #upload-section.upload-layout {
+        min-height: 100svh;
+        padding: 20px 0;
+      }
+
+      .upload-page {
+        gap: 18px;
+      }
+    }
+  </style>
 </head>
 <body>
-  <header class="site-header">
-    <div class="container header-content">
-      <a class="brand" href="/" aria-label="Página inicial">
-        <span class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M4 5.5 12 2l8 3.5v13L12 22l-8-3.5v-13Z"/><path d="m4 5.5 8 3.5 8-3.5M12 9v13"/></svg>
-        </span>
-        <span>
-          <strong>Giro de Estoque</strong>
-          <small>Análise de cobertura</small>
-        </span>
-      </a>
-      <div class="privacy-pill">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
-        Processamento local no navegador
-      </div>
-    </div>
-  </header>
-
   <main class="container main-content">
-    <section
-      id="upload-section"
-      class="upload-layout"
-      aria-labelledby="upload-title"
-    >
-      <div class="intro-copy">
-        <header class="intro-header">
-          <span class="eyebrow">Relatório de giro de estoque</span>
 
-          <h1 id="upload-title">
-            Descubra rapidamente quais produtos precisam de reposição.
-          </h1>
+    <section id="upload-section" class="upload-layout">
+      <div class="upload-page">
+        <h1 class="upload-page-title">Relatório de giro de estoque</h1>
 
-          <p class="intro-description">
-            Envie o relatório em PDF ou TXT. O sistema calcula os dias de
-            cobertura, classifica os itens abaixo de 5, 10, 15 e 20 dias e
-            gera uma planilha pronta para uso.
-          </p>
-        </header>
-
-        <ul class="feature-list" aria-label="Recursos do sistema">
-          <li class="feature-item">
-            <span class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <rect x="4" y="3" width="16" height="18" rx="2"></rect>
-                <path d="M8 7h8"></path>
-                <path d="M8 11h8"></path>
-                <path d="M8 15h5"></path>
-              </svg>
-            </span>
-
-            <div class="feature-content">
-              <strong>Leitura automática</strong>
-              <span>Identifica os produtos, valores e período do relatório.</span>
-            </div>
-          </li>
-
-          <li class="feature-item">
-            <span class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <path d="M3 3v18h18"></path>
-                <path d="m7 16 4-5 3 3 5-7"></path>
-              </svg>
-            </span>
-
-            <div class="feature-content">
-              <strong>Cobertura em dias</strong>
-              <span>Calculada com base na saída do período e no estoque atual.</span>
-            </div>
-          </li>
-
-          <li class="feature-item">
-            <span class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <path d="M12 3v12"></path>
-                <path d="m7 10 5 5 5-5"></path>
-                <path d="M5 21h14"></path>
-              </svg>
-            </span>
-
-            <div class="feature-content">
-              <strong>Exportação completa</strong>
-              <span>Exporte os resultados analisados nos formatos XLSX ou CSV.</span>
-            </div>
-          </li>
-        </ul>
-      </div>
-
-      <div class="upload-card">
+        <div class="upload-card">
         <div id="drop-zone" class="drop-zone" role="button" tabindex="0" aria-label="Enviar relatório em PDF ou TXT">
           <input id="file-input" type="file" accept=".pdf,.txt,application/pdf,text/plain" hidden />
           <span class="upload-icon" aria-hidden="true">
@@ -135,9 +99,7 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 17h.01"/></svg>
           <span id="error-text"></span>
         </div>
-
-        <p class="privacy-note">
-        </p>
+      </div>
       </div>
     </section>
 
@@ -277,8 +239,6 @@
       </details>
     </section>
   </main>
-
-  <footer class="site-footer"><div class="container">Analisador de Giro de Estoque • Os dados permanecem no dispositivo do usuário.</div></footer>
   <div id="toast" class="toast" hidden role="status" aria-live="polite"></div>
 
   <script type="module" src="/src/app.js"></script>
